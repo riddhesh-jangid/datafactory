@@ -1,0 +1,31 @@
+{
+	"name": "FactSales",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "landingzone",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Raw Data"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "Sales.csv",
+				"container": "rawdata"
+			},
+			"columnDelimiter": "\t",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "SalesOrderNumber\tOrderDate\tProductKey\tResellerKey\tEmployeeKey\tSalesTerritoryKey\tQuantity\tUnit Price\tSales\tCost",
+				"type": "String"
+			}
+		]
+	}
+}

@@ -1,0 +1,24 @@
+{
+	"name": "Region",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Medallion",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Medallion"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "Region.parquet",
+				"folderPath": "Bronze",
+				"fileSystem": "medallion"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}

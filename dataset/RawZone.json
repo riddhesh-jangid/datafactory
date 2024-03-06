@@ -1,0 +1,27 @@
+{
+	"name": "RawZone",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "landingzone",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"container": "rawdata"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "ProductKey\tProduct\tStandard Cost\tColor\tSubcategory\tCategory\tBackground Color Format\tFont Color Format",
+				"type": "String"
+			}
+		]
+	}
+}
