@@ -1,0 +1,9 @@
+{
+	"name": "factoryzone",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "1afe1cad-c00d-4cd7-9974-6bb501831ef1",
+		"tenantId": "0535443c-24a1-4cab-a508-33e33821d0da"
+	}
+}
