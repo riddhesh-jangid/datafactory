@@ -1,35 +1,32 @@
 {
-	"name": "DestinationZone",
+	"name": "Sales",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "Medallion",
 			"type": "LinkedServiceReference"
 		},
-		"parameters": {
-			"FileName": {
-				"type": "string"
-			}
-		},
 		"folder": {
-			"name": "BronzeLayer"
+			"name": "SilverLayer"
 		},
 		"annotations": [],
 		"type": "DelimitedText",
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": {
-					"value": "@dataset().FileName",
-					"type": "Expression"
-				},
+				"fileName": "Sales.csv",
 				"folderPath": "Bronze",
 				"fileSystem": "medallion"
 			},
-			"columnDelimiter": "\t",
+			"columnDelimiter": ",",
 			"escapeChar": "\\",
 			"firstRowAsHeader": true,
 			"quoteChar": "\""
 		},
-		"schema": []
+		"schema": [
+			{
+				"name": "SalesOrderNumber\tOrderDate\tProductKey\tResellerKey\tEmployeeKey\tSalesTerritoryKey\tQuantity\tUnit Price\tSales\tCost",
+				"type": "String"
+			}
+		]
 	}
 }

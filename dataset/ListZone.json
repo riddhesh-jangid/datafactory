@@ -5,6 +5,9 @@
 			"referenceName": "landingzone",
 			"type": "LinkedServiceReference"
 		},
+		"folder": {
+			"name": "BronzeLayer"
+		},
 		"annotations": [],
 		"type": "DelimitedText",
 		"typeProperties": {
