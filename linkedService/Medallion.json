@@ -1,0 +1,10 @@
+{
+	"name": "Medallion",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://medallionzone.dfs.core.windows.net/"
+		}
+	}
+}
