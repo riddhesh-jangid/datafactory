@@ -1,0 +1,12 @@
+{
+	"name": "landingzone",
+	"properties": {
+		"description": "To get raw data.",
+		"annotations": [],
+		"type": "AzureBlobStorage",
+		"typeProperties": {
+			"serviceEndpoint": "https://landingblobzone.blob.core.windows.net/",
+			"accountKind": "StorageV2"
+		}
+	}
+}
