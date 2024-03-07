@@ -11,11 +11,11 @@
 		"Medallion_properties_typeProperties_url": {
 			"value": "https://medallionzone.dfs.core.windows.net/"
 		},
-		"landingzone_properties_typeProperties_serviceEndpoint": {
-			"value": "https://landingblobzone.blob.core.windows.net/"
-		},
 		"databrickszone_properties_typeProperties_existingClusterId": {
 			"value": "0307-053306-286er3dw"
+		},
+		"landingzone_properties_typeProperties_serviceEndpoint": {
+			"value": "https://landingblobzone.blob.core.windows.net/"
 		}
 	}
 }

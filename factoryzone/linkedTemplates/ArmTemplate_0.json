@@ -15,13 +15,13 @@
 			"type": "string",
 			"defaultValue": "https://medallionzone.dfs.core.windows.net/"
 		},
-		"landingzone_properties_typeProperties_serviceEndpoint": {
-			"type": "string",
-			"defaultValue": "https://landingblobzone.blob.core.windows.net/"
-		},
 		"databrickszone_properties_typeProperties_existingClusterId": {
 			"type": "string",
 			"defaultValue": "0307-053306-286er3dw"
+		},
+		"landingzone_properties_typeProperties_serviceEndpoint": {
+			"type": "string",
+			"defaultValue": "https://landingblobzone.blob.core.windows.net/"
 		}
 	},
 	"variables": {
@@ -42,21 +42,6 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/landingzone')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "To get raw data.",
-				"annotations": [],
-				"type": "AzureBlobStorage",
-				"typeProperties": {
-					"serviceEndpoint": "[parameters('landingzone_properties_typeProperties_serviceEndpoint')]",
-					"accountKind": "StorageV2"
-				}
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/databrickszone')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -70,6 +55,21 @@
 						"value": "[parameters('databrickszone_accessToken')]"
 					},
 					"existingClusterId": "[parameters('databrickszone_properties_typeProperties_existingClusterId')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/landingzone')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "To get raw data.",
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"serviceEndpoint": "[parameters('landingzone_properties_typeProperties_serviceEndpoint')]",
+					"accountKind": "StorageV2"
 				}
 			},
 			"dependsOn": []
@@ -408,9 +408,7 @@
 						"policy": {
 							"secureInput": false
 						},
-						"userProperties": [
-							{}
-						],
+						"userProperties": [],
 						"typeProperties": {
 							"pipeline": {
 								"referenceName": "BronzeLayer",

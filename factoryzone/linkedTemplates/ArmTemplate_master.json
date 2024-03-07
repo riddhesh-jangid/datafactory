@@ -15,13 +15,13 @@
 			"type": "string",
 			"defaultValue": "https://medallionzone.dfs.core.windows.net/"
 		},
-		"landingzone_properties_typeProperties_serviceEndpoint": {
-			"type": "string",
-			"defaultValue": "https://landingblobzone.blob.core.windows.net/"
-		},
 		"databrickszone_properties_typeProperties_existingClusterId": {
 			"type": "string",
 			"defaultValue": "0307-053306-286er3dw"
+		},
+		"landingzone_properties_typeProperties_serviceEndpoint": {
+			"type": "string",
+			"defaultValue": "https://landingblobzone.blob.core.windows.net/"
 		},
 		"containerUri": {
 			"type": "string",
@@ -56,11 +56,11 @@
 					"Medallion_properties_typeProperties_url": {
 						"value": "[parameters('Medallion_properties_typeProperties_url')]"
 					},
-					"landingzone_properties_typeProperties_serviceEndpoint": {
-						"value": "[parameters('landingzone_properties_typeProperties_serviceEndpoint')]"
-					},
 					"databrickszone_properties_typeProperties_existingClusterId": {
 						"value": "[parameters('databrickszone_properties_typeProperties_existingClusterId')]"
+					},
+					"landingzone_properties_typeProperties_serviceEndpoint": {
+						"value": "[parameters('landingzone_properties_typeProperties_serviceEndpoint')]"
 					}
 				}
 			},
