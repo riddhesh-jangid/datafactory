@@ -1,0 +1,70 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "factoryzone"
+		},
+		"databrickszone_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'databrickszone'"
+		},
+		"Medallion_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://medallionzone.dfs.core.windows.net/"
+		},
+		"landingzone_properties_typeProperties_serviceEndpoint": {
+			"type": "string",
+			"defaultValue": "https://landingblobzone.blob.core.windows.net/"
+		},
+		"databrickszone_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0307-053306-286er3dw"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "factoryzone_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"databrickszone_accessToken": {
+						"value": "[parameters('databrickszone_accessToken')]"
+					},
+					"Medallion_properties_typeProperties_url": {
+						"value": "[parameters('Medallion_properties_typeProperties_url')]"
+					},
+					"landingzone_properties_typeProperties_serviceEndpoint": {
+						"value": "[parameters('landingzone_properties_typeProperties_serviceEndpoint')]"
+					},
+					"databrickszone_properties_typeProperties_existingClusterId": {
+						"value": "[parameters('databrickszone_properties_typeProperties_existingClusterId')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}

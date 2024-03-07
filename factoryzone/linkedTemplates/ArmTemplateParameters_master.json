@@ -1,0 +1,27 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "factoryzone"
+		},
+		"databrickszone_accessToken": {
+			"value": ""
+		},
+		"Medallion_properties_typeProperties_url": {
+			"value": "https://medallionzone.dfs.core.windows.net/"
+		},
+		"landingzone_properties_typeProperties_serviceEndpoint": {
+			"value": "https://landingblobzone.blob.core.windows.net/"
+		},
+		"databrickszone_properties_typeProperties_existingClusterId": {
+			"value": "0307-053306-286er3dw"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
