@@ -1,0 +1,30 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "RegionSilver",
+						"type": "DatasetReference"
+					},
+					"name": "ProcessRegionBronze"
+				}
+			],
+			"sinks": [],
+			"transformations": [],
+			"scriptLines": [
+				"source(output(",
+				"          SalesTerritoryKey as string,",
+				"          Region as string,",
+				"          Country as string,",
+				"          Group as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> ProcessRegionBronze"
+			]
+		}
+	}
+}
