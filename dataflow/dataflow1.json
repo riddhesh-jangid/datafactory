@@ -9,11 +9,68 @@
 						"referenceName": "RegionSilver",
 						"type": "DatasetReference"
 					},
-					"name": "ProcessRegionBronze"
+					"name": "BronzeRegion"
+				},
+				{
+					"dataset": {
+						"referenceName": "ProductSilver",
+						"type": "DatasetReference"
+					},
+					"name": "BronzeProduct"
+				},
+				{
+					"dataset": {
+						"referenceName": "SalesSilver",
+						"type": "DatasetReference"
+					},
+					"name": "BronzeSales"
 				}
 			],
-			"sinks": [],
-			"transformations": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "MedallionSilverSave",
+						"type": "DatasetReference"
+					},
+					"name": "SaveSilverRegion"
+				},
+				{
+					"dataset": {
+						"referenceName": "MedallionSilverSave",
+						"type": "DatasetReference"
+					},
+					"name": "SaveSilverProduct"
+				},
+				{
+					"dataset": {
+						"referenceName": "MedallionSilverSave",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "SelectRegion",
+					"description": "Select Columns"
+				},
+				{
+					"name": "selectProduct",
+					"description": "Select Columns"
+				},
+				{
+					"name": "TransformationProduct",
+					"description": "Tranformation"
+				},
+				{
+					"name": "selectSales",
+					"description": "Select Columns"
+				},
+				{
+					"name": "TransformationSales",
+					"description": "Tranformation"
+				}
+			],
 			"scriptLines": [
 				"source(output(",
 				"          SalesTerritoryKey as string,",
@@ -22,8 +79,96 @@
 				"          Group as string",
 				"     ),",
 				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     ignoreNoFilesFound: false) ~> BronzeRegion",
+				"source(output(",
+				"          ProductKey as string,",
+				"          Product as string,",
+				"          {Standard Cost} as string,",
+				"          Color as string,",
+				"          Subcategory as string,",
+				"          Category as string,",
+				"          {Background Color Format} as string,",
+				"          {Font Color Format} as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false) ~> ProcessRegionBronze"
+				"     ignoreNoFilesFound: false) ~> BronzeProduct",
+				"source(output(",
+				"          SalesOrderNumber as string,",
+				"          OrderDate as string,",
+				"          ProductKey as string,",
+				"          ResellerKey as string,",
+				"          EmployeeKey as string,",
+				"          SalesTerritoryKey as string,",
+				"          Quantity as string,",
+				"          {Unit Price} as string,",
+				"          Sales as string,",
+				"          Cost as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     limit: 100,",
+				"     ignoreNoFilesFound: false) ~> BronzeSales",
+				"BronzeRegion select(mapColumn(",
+				"          SalesTerritoryKey,",
+				"          Region,",
+				"          Country",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectRegion",
+				"BronzeProduct select(mapColumn(",
+				"          ProductKey,",
+				"          Product,",
+				"          StandardCost = {Standard Cost},",
+				"          Color,",
+				"          Subcategory,",
+				"          Category",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectProduct",
+				"selectProduct derive(StandardCost = substring(StandardCost,2,20),",
+				"          Product = split(Product,',')[1]) ~> TransformationProduct",
+				"BronzeSales select(mapColumn(",
+				"          ProductKey,",
+				"          SalesTerritoryKey,",
+				"          Quantity,",
+				"          UnitPrice = {Unit Price},",
+				"          Sales,",
+				"          Cost,",
+				"          OrderDate",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectSales",
+				"selectSales derive(Year = split(OrderDate, ', ')[3],",
+				"          Month = split(split(OrderDate, ', ')[2],\" \")[1],",
+				"          UnitPrice = substring(UnitPrice, 2, 20),",
+				"          Sales = substring(Sales, 2, 20),",
+				"          Cost = substring(Cost, 2, 20)) ~> TransformationSales",
+				"SelectRegion sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SaveSilverRegion",
+				"TransformationProduct sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SaveSilverProduct",
+				"TransformationSales sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink1"
 			]
 		}
 	}

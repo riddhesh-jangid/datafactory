@@ -1,0 +1,23 @@
+{
+	"name": "MedallionSilverSave",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Medallion",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Medallion"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "Silver",
+				"fileSystem": "medallion"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}
