@@ -12,6 +12,9 @@
 			},
 			"layerName": {
 				"type": "string"
+			},
+			"tableName": {
+				"type": "string"
 			}
 		},
 		"annotations": [],
@@ -19,6 +22,10 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().tableName",
+					"type": "Expression"
+				},
 				"folderPath": {
 					"value": "@dataset().layerName",
 					"type": "Expression"
