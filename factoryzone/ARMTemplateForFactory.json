@@ -29,6 +29,57 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/ADF Silver Gold')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "BronzeSilver",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "BronzeSilver",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"BronzeRegion": {},
+									"BronzeProduct": {},
+									"BronzeSales": {},
+									"SaveSilverRegion": {},
+									"SaveSilverProduct": {},
+									"SaveSilverSales": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"runConcurrently": true
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/BronzeSilver')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/BronzeLayer')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -50,7 +101,12 @@
 							"dataset": {
 								"referenceName": "ListZone",
 								"type": "DatasetReference",
-								"parameters": {}
+								"parameters": {
+									"folderName": {
+										"value": "@pipeline().parameters.folderName",
+										"type": "Expression"
+									}
+								}
 							},
 							"fieldList": [
 								"childItems",
@@ -157,6 +213,11 @@
 				],
 				"policy": {
 					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"folderName": {
+						"type": "string"
+					}
 				},
 				"annotations": []
 			},
@@ -303,6 +364,11 @@
 					"referenceName": "landingzone",
 					"type": "LinkedServiceReference"
 				},
+				"parameters": {
+					"folderName": {
+						"type": "string"
+					}
+				},
 				"folder": {
 					"name": "BronzeLayer"
 				},
@@ -311,7 +377,10 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobStorageLocation",
-						"container": "rawdata"
+						"container": {
+							"value": "@dataset().folderName",
+							"type": "Expression"
+						}
 					},
 					"columnDelimiter": "\t",
 					"escapeChar": "\\",
@@ -327,6 +396,99 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/landingzone')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/MedallionSilverSave')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Medallion",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Medallion"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "Silver",
+						"fileSystem": "medallion"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Medallion')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ProductSilver')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Medallion",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Bronze Datasets"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "Product.csv",
+						"folderPath": "Bronze",
+						"fileSystem": "medallion"
+					},
+					"columnDelimiter": "\t",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "ProductKey",
+						"type": "String"
+					},
+					{
+						"name": "Product",
+						"type": "String"
+					},
+					{
+						"name": "Standard Cost",
+						"type": "String"
+					},
+					{
+						"name": "Color",
+						"type": "String"
+					},
+					{
+						"name": "Subcategory",
+						"type": "String"
+					},
+					{
+						"name": "Category",
+						"type": "String"
+					},
+					{
+						"name": "Background Color Format",
+						"type": "String"
+					},
+					{
+						"name": "Font Color Format",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Medallion')]"
 			]
 		},
 		{
@@ -374,6 +536,55 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/RegionSilver')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Medallion",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Bronze Datasets"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "Region.csv",
+						"folderPath": "Bronze",
+						"fileSystem": "medallion"
+					},
+					"columnDelimiter": "\t",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "SalesTerritoryKey",
+						"type": "String"
+					},
+					{
+						"name": "Region",
+						"type": "String"
+					},
+					{
+						"name": "Country",
+						"type": "String"
+					},
+					{
+						"name": "Group",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Medallion')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Sales')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -402,6 +613,137 @@
 				"schema": [
 					{
 						"name": "SalesOrderNumber\tOrderDate\tProductKey\tResellerKey\tEmployeeKey\tSalesTerritoryKey\tQuantity\tUnit Price\tSales\tCost",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Medallion')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SalesSilver')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Medallion",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Bronze Datasets"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "Sales.csv",
+						"folderPath": "Bronze",
+						"fileSystem": "medallion"
+					},
+					"columnDelimiter": "\t",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "SalesOrderNumber",
+						"type": "String"
+					},
+					{
+						"name": "OrderDate",
+						"type": "String"
+					},
+					{
+						"name": "ProductKey",
+						"type": "String"
+					},
+					{
+						"name": "ResellerKey",
+						"type": "String"
+					},
+					{
+						"name": "EmployeeKey",
+						"type": "String"
+					},
+					{
+						"name": "SalesTerritoryKey",
+						"type": "String"
+					},
+					{
+						"name": "Quantity",
+						"type": "String"
+					},
+					{
+						"name": "Unit Price",
+						"type": "String"
+					},
+					{
+						"name": "Sales",
+						"type": "String"
+					},
+					{
+						"name": "Cost",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Medallion')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/medallion')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Medallion",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderName": {
+						"type": "string",
+						"defaultValue": "medallion"
+					},
+					"layerName": {
+						"type": "string"
+					},
+					"tableName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Bronze Datasets"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().tableName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().layerName",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().folderName",
+							"type": "Expression"
+						}
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "ProductKey\tProduct\tStandard Cost\tColor\tSubcategory\tCategory\tBackground Color Format\tFont Color Format",
 						"type": "String"
 					}
 				]
@@ -455,6 +797,224 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/BronzeSilver')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "RegionSilver",
+								"type": "DatasetReference"
+							},
+							"name": "BronzeRegion"
+						},
+						{
+							"dataset": {
+								"referenceName": "ProductSilver",
+								"type": "DatasetReference"
+							},
+							"name": "BronzeProduct"
+						},
+						{
+							"dataset": {
+								"referenceName": "SalesSilver",
+								"type": "DatasetReference"
+							},
+							"name": "BronzeSales"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "Medallion",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SaveSilverRegion"
+						},
+						{
+							"linkedService": {
+								"referenceName": "Medallion",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SaveSilverProduct"
+						},
+						{
+							"linkedService": {
+								"referenceName": "Medallion",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SaveSilverSales"
+						}
+					],
+					"transformations": [
+						{
+							"name": "SelectRegion",
+							"description": "Select Columns"
+						},
+						{
+							"name": "selectProduct",
+							"description": "Select Columns"
+						},
+						{
+							"name": "TransformationProduct",
+							"description": "Tranformation"
+						},
+						{
+							"name": "selectSales",
+							"description": "Select Columns"
+						},
+						{
+							"name": "TransformationSales",
+							"description": "Tranformation"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          SalesTerritoryKey as string,",
+						"          Region as string,",
+						"          Country as string,",
+						"          Group as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false) ~> BronzeRegion",
+						"source(output(",
+						"          ProductKey as string,",
+						"          Product as string,",
+						"          {Standard Cost} as string,",
+						"          Color as string,",
+						"          Subcategory as string,",
+						"          Category as string,",
+						"          {Background Color Format} as string,",
+						"          {Font Color Format} as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> BronzeProduct",
+						"source(output(",
+						"          SalesOrderNumber as string,",
+						"          OrderDate as string,",
+						"          ProductKey as string,",
+						"          ResellerKey as string,",
+						"          EmployeeKey as string,",
+						"          SalesTerritoryKey as string,",
+						"          Quantity as string,",
+						"          {Unit Price} as string,",
+						"          Sales as string,",
+						"          Cost as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     limit: 100,",
+						"     ignoreNoFilesFound: false) ~> BronzeSales",
+						"BronzeRegion select(mapColumn(",
+						"          SalesTerritoryKey,",
+						"          Region,",
+						"          Country",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectRegion",
+						"BronzeProduct select(mapColumn(",
+						"          ProductKey,",
+						"          Product,",
+						"          StandardCost = {Standard Cost},",
+						"          Color,",
+						"          Subcategory,",
+						"          Category",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectProduct",
+						"selectProduct derive(StandardCost = substring(StandardCost,2,20),",
+						"          Product = split(Product,',')[1]) ~> TransformationProduct",
+						"BronzeSales select(mapColumn(",
+						"          ProductKey,",
+						"          SalesTerritoryKey,",
+						"          Quantity,",
+						"          UnitPrice = {Unit Price},",
+						"          Sales,",
+						"          Cost,",
+						"          OrderDate",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectSales",
+						"selectSales derive(Year = split(OrderDate, ', ')[3],",
+						"          Month = split(split(OrderDate, ', ')[2],\" \")[1],",
+						"          UnitPrice = substring(UnitPrice, 2, 20),",
+						"          Sales = substring(Sales, 2, 20),",
+						"          Cost = substring(Cost, 2, 20)) ~> TransformationSales",
+						"SelectRegion sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     fileSystem: 'medallion',",
+						"     folderPath: 'Silver/Region',",
+						"     mergeSchema: false,",
+						"     autoCompact: false,",
+						"     optimizedWrite: false,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 1) ~> SaveSilverRegion",
+						"TransformationProduct sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     fileSystem: 'medallion',",
+						"     folderPath: 'Silver/Product',",
+						"     mergeSchema: false,",
+						"     autoCompact: false,",
+						"     optimizedWrite: false,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SaveSilverProduct",
+						"TransformationSales sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     fileSystem: 'medallion',",
+						"     folderPath: 'Silver/Sales',",
+						"     mergeSchema: false,",
+						"     autoCompact: false,",
+						"     optimizedWrite: false,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('key',",
+						"          0,",
+						"          SalesTerritoryKey",
+						"     )) ~> SaveSilverSales"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/RegionSilver')]",
+				"[concat(variables('factoryId'), '/datasets/ProductSilver')]",
+				"[concat(variables('factoryId'), '/datasets/SalesSilver')]",
+				"[concat(variables('factoryId'), '/linkedServices/Medallion')]"
+			]
 		}
 	]
 }
