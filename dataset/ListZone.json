@@ -5,6 +5,11 @@
 			"referenceName": "landingzone",
 			"type": "LinkedServiceReference"
 		},
+		"parameters": {
+			"folderName": {
+				"type": "string"
+			}
+		},
 		"folder": {
 			"name": "BronzeLayer"
 		},
@@ -13,7 +18,10 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
-				"container": "rawdata"
+				"container": {
+					"value": "@dataset().folderName",
+					"type": "Expression"
+				}
 			},
 			"columnDelimiter": "\t",
 			"escapeChar": "\\",
