@@ -108,7 +108,6 @@
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     limit: 100,",
 				"     ignoreNoFilesFound: false) ~> BronzeSales",
 				"BronzeRegion select(mapColumn(",
 				"          SalesTerritoryKey,",
@@ -201,7 +200,7 @@
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
 				"     partitionBy('key',",
-				"          1,",
+				"          0,",
 				"          SalesTerritoryKey",
 				"     )) ~> SaveSilverSales"
 			]
