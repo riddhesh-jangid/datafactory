@@ -1,0 +1,60 @@
+{
+	"name": "ProductSilver",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Medallion",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Bronze Datasets"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "Product.csv",
+				"folderPath": "Bronze",
+				"fileSystem": "medallion"
+			},
+			"columnDelimiter": "\t",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "ProductKey",
+				"type": "String"
+			},
+			{
+				"name": "Product",
+				"type": "String"
+			},
+			{
+				"name": "Standard Cost",
+				"type": "String"
+			},
+			{
+				"name": "Color",
+				"type": "String"
+			},
+			{
+				"name": "Subcategory",
+				"type": "String"
+			},
+			{
+				"name": "Category",
+				"type": "String"
+			},
+			{
+				"name": "Background Color Format",
+				"type": "String"
+			},
+			{
+				"name": "Font Color Format",
+				"type": "String"
+			}
+		]
+	}
+}
