@@ -46,7 +46,7 @@
 						"referenceName": "Medallion",
 						"type": "LinkedServiceReference"
 					},
-					"name": "sink1"
+					"name": "SaveSilverSales"
 				}
 			],
 			"transformations": [
@@ -199,7 +199,11 @@
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> sink1"
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('key',",
+				"          1,",
+				"          SalesTerritoryKey",
+				"     )) ~> SaveSilverSales"
 			]
 		}
 	}
