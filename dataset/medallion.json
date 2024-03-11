@@ -17,6 +17,9 @@
 				"type": "string"
 			}
 		},
+		"folder": {
+			"name": "Bronze Datasets"
+		},
 		"annotations": [],
 		"type": "DelimitedText",
 		"typeProperties": {
