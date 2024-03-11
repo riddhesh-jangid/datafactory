@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Get Metadata1",
+				"name": "Get all files",
 				"type": "GetMetadata",
 				"dependsOn": [],
 				"policy": {
@@ -38,11 +38,11 @@
 				}
 			},
 			{
-				"name": "Filter1",
+				"name": "Filter File",
 				"type": "Filter",
 				"dependsOn": [
 					{
-						"activity": "Get Metadata1",
+						"activity": "Get all files",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -51,13 +51,52 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Get Metadata1').output.childItems",
+						"value": "@activity('Get all files').output.childItems",
 						"type": "Expression"
 					},
 					"condition": {
-						"value": "@equals(item().itemType,'file')",
+						"value": "@equals(item().type,'File')",
 						"type": "Expression"
 					}
+				}
+			},
+			{
+				"name": "Process Bronze",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Filter File",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Filter File').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Switch1",
+							"type": "Switch",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"on": {
+									"value": "@item().name",
+									"type": "Expression"
+								},
+								"cases": [
+									{
+										"value": "Region.csv"
+									}
+								]
+							}
+						}
+					]
 				}
 			}
 		],
