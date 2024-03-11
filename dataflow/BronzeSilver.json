@@ -1,5 +1,5 @@
 {
-	"name": "dataflow1",
+	"name": "BronzeSilver",
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {
@@ -28,23 +28,23 @@
 			],
 			"sinks": [
 				{
-					"dataset": {
-						"referenceName": "MedallionSilverSave",
-						"type": "DatasetReference"
+					"linkedService": {
+						"referenceName": "Medallion",
+						"type": "LinkedServiceReference"
 					},
 					"name": "SaveSilverRegion"
 				},
 				{
-					"dataset": {
-						"referenceName": "MedallionSilverSave",
-						"type": "DatasetReference"
+					"linkedService": {
+						"referenceName": "Medallion",
+						"type": "LinkedServiceReference"
 					},
 					"name": "SaveSilverProduct"
 				},
 				{
-					"dataset": {
-						"referenceName": "MedallionSilverSave",
-						"type": "DatasetReference"
+					"linkedService": {
+						"referenceName": "Medallion",
+						"type": "LinkedServiceReference"
 					},
 					"name": "sink1"
 				}
@@ -147,15 +147,36 @@
 				"          Cost = substring(Cost, 2, 20)) ~> TransformationSales",
 				"SelectRegion sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     format: 'parquet',",
+				"     format: 'delta',",
+				"     fileSystem: 'medallion',",
+				"     folderPath: 'Silver',",
+				"     mergeSchema: false,",
+				"     autoCompact: false,",
+				"     optimizedWrite: false,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     upsertable: false,",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> SaveSilverRegion",
+				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 1) ~> SaveSilverRegion",
 				"TransformationProduct sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     format: 'parquet',",
+				"     format: 'delta',",
+				"     fileSystem: 'medallion',",
+				"     folderPath: 'Silver',",
+				"     mergeSchema: false,",
+				"     autoCompact: false,",
+				"     optimizedWrite: false,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     upsertable: false,",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
@@ -163,7 +184,17 @@
 				"     skipDuplicateMapOutputs: true) ~> SaveSilverProduct",
 				"TransformationSales sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     format: 'parquet',",
+				"     format: 'delta',",
+				"     fileSystem: 'medallion',",
+				"     folderPath: 'Silver',",
+				"     mergeSchema: false,",
+				"     autoCompact: false,",
+				"     optimizedWrite: false,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     upsertable: false,",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
