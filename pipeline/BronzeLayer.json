@@ -71,7 +71,7 @@
 									"parameters": {
 										"folderName": "rawdata",
 										"fileName": {
-											"value": "@item().fileName",
+											"value": "@item().name",
 											"type": "Expression"
 										}
 									}
