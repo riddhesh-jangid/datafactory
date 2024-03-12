@@ -255,6 +255,14 @@
 												"direction": "Input"
 											},
 											{
+												"name": "lastModified",
+												"type": "Datetime",
+												"value": {
+													"value": "@item().lastModified",
+													"type": "Expression"
+												}
+											},
+											{
 												"name": "datetime",
 												"type": "Datetime",
 												"value": {
@@ -265,7 +273,7 @@
 											}
 										],
 										"type": "NonQuery",
-										"text": "INSERT INTO dbo.ControlTAble VALUES (@fileName, null, @datetime)"
+										"text": "INSERT INTO dbo.ControlTAble VALUES (@fileName, @lastModified, @datetime)"
 									}
 								],
 								"scriptBlockExecutionTimeout": "02:00:00"
