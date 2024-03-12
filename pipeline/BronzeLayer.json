@@ -260,7 +260,8 @@
 												"value": {
 													"value": "@item().lastModified",
 													"type": "Expression"
-												}
+												},
+												"direction": "Input"
 											},
 											{
 												"name": "datetime",
