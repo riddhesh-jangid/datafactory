@@ -193,7 +193,7 @@
 								"scripts": [
 									{
 										"type": "Query",
-										"text": "select count(*) from dbo.ControlTable"
+										"text": "select count(*) as count from dbo.ControlTable"
 									}
 								],
 								"scriptBlockExecutionTimeout": "02:00:00"
