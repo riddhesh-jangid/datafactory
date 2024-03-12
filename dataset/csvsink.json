@@ -1,0 +1,25 @@
+{
+	"name": "csvsink",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "landingzone",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Experiment"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"container": "output"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
