@@ -19,9 +19,9 @@
 					"name": "BronzeProduct"
 				},
 				{
-					"dataset": {
-						"referenceName": "SalesSilver",
-						"type": "DatasetReference"
+					"linkedService": {
+						"referenceName": "Medallion",
+						"type": "LinkedServiceReference"
 					},
 					"name": "BronzeSales"
 				}
@@ -94,21 +94,16 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> BronzeProduct",
-				"source(output(",
-				"          SalesOrderNumber as string,",
-				"          OrderDate as string,",
-				"          ProductKey as string,",
-				"          ResellerKey as string,",
-				"          EmployeeKey as string,",
-				"          SalesTerritoryKey as string,",
-				"          Quantity as string,",
-				"          {Unit Price} as string,",
-				"          Sales as string,",
-				"          Cost as string",
-				"     ),",
+				"source(useSchema: false,",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false) ~> BronzeSales",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'medallion',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false) ~> BronzeSales",
 				"BronzeRegion select(mapColumn(",
 				"          SalesTerritoryKey,",
 				"          Region,",
