@@ -199,33 +199,15 @@
 												"value": {
 													"value": "@item().name",
 													"type": "Expression"
-												}
+												},
+												"direction": "Input"
 											}
 										],
 										"type": "Query",
-										"text": "select coalesce(count(*), null)from dbo.ControlTable where CSV=@fileName"
+										"text": "select count(*) from dbo.ControlTable where CSV=@fileName"
 									}
 								],
 								"scriptBlockExecutionTimeout": "02:00:00"
-							}
-						},
-						{
-							"name": "If Condition1",
-							"type": "IfCondition",
-							"dependsOn": [
-								{
-									"activity": "Script1",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"userProperties": [],
-							"typeProperties": {
-								"expression": {
-									"value": "@item()",
-									"type": "Expression"
-								}
 							}
 						}
 					]
