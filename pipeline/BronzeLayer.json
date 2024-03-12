@@ -94,8 +94,6 @@
 						{
 							"name": "Copy data1",
 							"type": "Copy",
-							"state": "Inactive",
-							"onInactiveMarkAs": "Succeeded",
 							"dependsOn": [
 								{
 									"activity": "Script2",
@@ -231,7 +229,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"expression": {
-									"value": "@equals(activity('Script1').output.resultSetCount, 0) ",
+									"value": "@or(\n    equals(activity('Script1').output.resultSetCount, 0), \n    and(\n        equals(activity('Script1').output.resultSetCount, 1), \n        greater(\n        activity('Script1').output.resultSets[0].rows.Modified,\n        activity('Script1').output.resultSets[0].rows.Refreshed        \n        )\n    )\n)",
 									"type": "Expression"
 								}
 							}
