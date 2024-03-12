@@ -88,11 +88,36 @@
 									"type": "DelimitedTextReadSettings"
 								}
 							}
+						},
+						{
+							"name": "Append File Name",
+							"type": "AppendVariable",
+							"dependsOn": [
+								{
+									"activity": "File",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "processedFileName",
+								"value": {
+									"value": "@item()",
+									"type": "Expression"
+								}
+							}
 						}
 					]
 				}
 			}
 		],
+		"variables": {
+			"processedFileName": {
+				"type": "Array"
+			}
+		},
 		"annotations": []
 	}
 }
