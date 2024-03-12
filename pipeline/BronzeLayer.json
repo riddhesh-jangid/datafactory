@@ -134,10 +134,12 @@
 				"typeProperties": {
 					"source": {
 						"type": "DelimitedTextSource",
-						"additionalColumns": {
-							"type": "Expression",
-							"value": "@variables('processedFileName')"
-						},
+						"additionalColumns": [
+							{
+								"name": "ProcessedFiles",
+								"value": "@variables('processedFileName')"
+							}
+						],
 						"storeSettings": {
 							"type": "AzureBlobStorageReadSettings",
 							"recursive": true,
