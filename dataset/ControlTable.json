@@ -1,0 +1,36 @@
+{
+	"name": "ControlTable",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SQLZone",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "SQL"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "CSV",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Modified",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "Refreshed",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "ControlTable"
+		}
+	}
+}
