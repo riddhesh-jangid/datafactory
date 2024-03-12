@@ -251,7 +251,8 @@
 												"value": {
 													"value": "@item().name",
 													"type": "Expression"
-												}
+												},
+												"direction": "Input"
 											},
 											{
 												"name": "datetime",
@@ -259,7 +260,8 @@
 												"value": {
 													"value": "@utcnow()",
 													"type": "Expression"
-												}
+												},
+												"direction": "Input"
 											}
 										],
 										"type": "NonQuery",
