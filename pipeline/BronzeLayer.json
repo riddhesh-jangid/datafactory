@@ -258,7 +258,7 @@
 												"name": "lastModified",
 												"type": "Datetime",
 												"value": {
-													"value": "@item().lastModified",
+													"value": "@activity('File').output.lastModified",
 													"type": "Expression"
 												},
 												"direction": "Input"
