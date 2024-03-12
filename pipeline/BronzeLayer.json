@@ -282,7 +282,7 @@
 														}
 													],
 													"type": "NonQuery",
-													"text": "INSERT INTO dbo.ControlTAble VALUES (@fileName, @lastModified, @datetime)"
+													"text": "INSERT INTO dbo.ControlTAble VALUES (@fileName, @lastModified, @datetime, 'N')"
 												}
 											],
 											"scriptBlockExecutionTimeout": "02:00:00"
