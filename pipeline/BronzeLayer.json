@@ -204,7 +204,7 @@
 											}
 										],
 										"type": "Query",
-										"text": "select count(*) from dbo.ControlTable where CSV=@fileName"
+										"text": "select count(*) from dbo.ControlTable"
 									}
 								],
 								"scriptBlockExecutionTimeout": "02:00:00"
