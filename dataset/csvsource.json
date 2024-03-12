@@ -5,11 +5,6 @@
 			"referenceName": "landingzone",
 			"type": "LinkedServiceReference"
 		},
-		"parameters": {
-			"fileName": {
-				"type": "string"
-			}
-		},
 		"folder": {
 			"name": "Experiment"
 		},
@@ -18,10 +13,6 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
-				"fileName": {
-					"value": "@dataset().fileName",
-					"type": "Expression"
-				},
 				"container": "experiment"
 			},
 			"columnDelimiter": ",",
