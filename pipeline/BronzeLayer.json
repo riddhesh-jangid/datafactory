@@ -217,6 +217,57 @@
 									"type": "Expression"
 								}
 							}
+						},
+						{
+							"name": "Script2",
+							"type": "Script",
+							"dependsOn": [
+								{
+									"activity": "If Condition1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "SQLZone",
+								"type": "LinkedServiceReference"
+							},
+							"typeProperties": {
+								"scripts": [
+									{
+										"parameters": [
+											{
+												"name": "fileName",
+												"type": "String",
+												"value": {
+													"value": "@item().name",
+													"type": "Expression"
+												}
+											},
+											{
+												"name": "datetime",
+												"type": "Datetime",
+												"value": {
+													"value": "@utcnow()",
+													"type": "Expression"
+												}
+											}
+										],
+										"type": "NonQuery",
+										"text": "INSERT INTO dbo.ControlTAble VALUES (@fileName, null, @datetime)"
+									}
+								],
+								"scriptBlockExecutionTimeout": "02:00:00"
+							}
 						}
 					]
 				}
