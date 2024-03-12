@@ -137,7 +137,7 @@
 						"additionalColumns": [
 							{
 								"name": "ProcessedFiles",
-								"value": "@variables('processedFileName')"
+								"value": "@join(variables('processedFileName'), ',') "
 							}
 						],
 						"storeSettings": {
