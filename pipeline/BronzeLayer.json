@@ -197,7 +197,7 @@
 												"name": "fileName",
 												"type": "String",
 												"value": {
-													"value": "@item().name",
+													"value": "@item().itemName",
 													"type": "Expression"
 												},
 												"direction": "Input"
