@@ -203,7 +203,7 @@
 											}
 										],
 										"type": "Query",
-										"text": "select count(*) from dbo.ControlTable where CSV=@fileName"
+										"text": "select coalesce(count(*), null)from dbo.ControlTable where CSV=@fileName"
 									}
 								],
 								"scriptBlockExecutionTimeout": "02:00:00"
