@@ -132,8 +132,62 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"enableStaging": false
-				}
+					"source": {
+						"type": "DelimitedTextSource",
+						"additionalColumns": {
+							"type": "Expression",
+							"value": "@variables('processedFileName')"
+						},
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobStorageWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "fileZone",
+						"type": "DatasetReference",
+						"parameters": {
+							"folderName": "rawdata",
+							"fileName": "processedFiles.csv"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "fileZone",
+						"type": "DatasetReference",
+						"parameters": {
+							"folderName": "rawdata",
+							"fileName": "processedFiles.csv"
+						}
+					}
+				]
 			}
 		],
 		"variables": {
