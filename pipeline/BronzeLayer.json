@@ -192,17 +192,6 @@
 							"typeProperties": {
 								"scripts": [
 									{
-										"parameters": [
-											{
-												"name": "fileName",
-												"type": "String",
-												"value": {
-													"value": "@item().name",
-													"type": "Expression"
-												},
-												"direction": "Input"
-											}
-										],
 										"type": "Query",
 										"text": "select count(*) from dbo.ControlTable"
 									}
