@@ -677,54 +677,6 @@
 									}
 								]
 							}
-						},
-						{
-							"name": "Set variable1",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "Switch1",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "debugOutput",
-								"value": {
-									"value": "@concat(item().name, ' - ' ,activity('File').output.lastModified)",
-									"type": "Expression"
-								}
-							}
-						},
-						{
-							"name": "Set variable1_copy1",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "Switch1",
-									"dependencyConditions": [
-										"Failed"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "debugOutput",
-								"value": {
-									"value": "@concat(item().name, ' - ' ,activity('File').output.lastModified)",
-									"type": "Expression"
-								}
-							}
 						}
 					]
 				}
