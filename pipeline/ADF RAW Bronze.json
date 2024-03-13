@@ -618,6 +618,9 @@
 				"type": "String"
 			}
 		},
+		"folder": {
+			"name": "ADF Medallion"
+		},
 		"annotations": []
 	}
 }
