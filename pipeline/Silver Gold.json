@@ -39,7 +39,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
-						"referenceName": "BronzeLayer",
+						"referenceName": "ADF RAW Bronze",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true
