@@ -1,0 +1,36 @@
+{
+	"name": "SalesGold",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Medallion",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Silver Datasets"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "Silver/Sales",
+				"fileSystem": "medallion"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": [
+			{
+				"name": "SalesTerritoryKey",
+				"type": "UTF8"
+			},
+			{
+				"name": "Region",
+				"type": "UTF8"
+			},
+			{
+				"name": "Country",
+				"type": "UTF8"
+			}
+		]
+	}
+}
