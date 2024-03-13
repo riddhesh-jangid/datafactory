@@ -1,5 +1,5 @@
 {
-	"name": "MarketBronzeSilver",
+	"name": "ProductBronzeSilver",
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {
