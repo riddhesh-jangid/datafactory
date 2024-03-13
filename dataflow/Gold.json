@@ -29,7 +29,14 @@
 				}
 			],
 			"sinks": [],
-			"transformations": [],
+			"transformations": [
+				{
+					"name": "SalesJoinProduct"
+				},
+				{
+					"name": "SalesJoinProductJoinRegion"
+				}
+			],
 			"scriptLines": [
 				"source(output(",
 				"          SalesTerritoryKey as string,",
@@ -53,7 +60,7 @@
 				"     ignoreNoFilesFound: false,",
 				"     format: 'parquet') ~> ProductGold",
 				"source(output(",
-				"          ProductKey as short,",
+				"          ProductKey as string,",
 				"          Quantity as short,",
 				"          UnitPrice as string,",
 				"          Sales as string,",
@@ -66,7 +73,17 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
-				"     format: 'parquet') ~> SalesGold"
+				"     format: 'parquet') ~> SalesGold",
+				"SalesGold, ProductGold join(SalesGold@ProductKey == ProductGold@ProductKey,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> SalesJoinProduct",
+				"SalesJoinProduct, RegionGold join(SalesGold@SalesTerritoryKey == RegionGold@SalesTerritoryKey,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> SalesJoinProductJoinRegion"
 			]
 		}
 	}
