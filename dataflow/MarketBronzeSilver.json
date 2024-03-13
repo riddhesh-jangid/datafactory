@@ -1,0 +1,81 @@
+{
+	"name": "MarketBronzeSilver",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ProductSilver",
+						"type": "DatasetReference"
+					},
+					"name": "BronzeProduct"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "Medallion",
+						"type": "LinkedServiceReference"
+					},
+					"name": "SaveSilverProduct"
+				}
+			],
+			"transformations": [
+				{
+					"name": "selectProduct",
+					"description": "Select Columns"
+				},
+				{
+					"name": "TransformationProduct",
+					"description": "Tranformation"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          ProductKey as string,",
+				"          Product as string,",
+				"          {Standard Cost} as string,",
+				"          Color as string,",
+				"          Subcategory as string,",
+				"          Category as string,",
+				"          {Background Color Format} as string,",
+				"          {Font Color Format} as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> BronzeProduct",
+				"BronzeProduct select(mapColumn(",
+				"          ProductKey,",
+				"          Product,",
+				"          StandardCost = {Standard Cost},",
+				"          Color,",
+				"          Subcategory,",
+				"          Category",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectProduct",
+				"selectProduct derive(StandardCost = substring(StandardCost,2,20),",
+				"          Product = split(Product,',')[1]) ~> TransformationProduct",
+				"TransformationProduct sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delta',",
+				"     fileSystem: 'medallion',",
+				"     folderPath: 'Silver/Product',",
+				"     mergeSchema: false,",
+				"     autoCompact: false,",
+				"     optimizedWrite: false,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     upsertable: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SaveSilverProduct"
+			]
+		}
+	}
+}
