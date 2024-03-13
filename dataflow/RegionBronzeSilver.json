@@ -1,0 +1,69 @@
+{
+	"name": "RegionBronzeSilver",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "RegionSilver",
+						"type": "DatasetReference"
+					},
+					"name": "BronzeRegion"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "Medallion",
+						"type": "LinkedServiceReference"
+					},
+					"name": "SaveSilverRegion"
+				}
+			],
+			"transformations": [
+				{
+					"name": "SelectRegion",
+					"description": "Select Columns"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          SalesTerritoryKey as string,",
+				"          Region as string,",
+				"          Country as string,",
+				"          Group as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     ignoreNoFilesFound: false) ~> BronzeRegion",
+				"BronzeRegion select(mapColumn(",
+				"          SalesTerritoryKey,",
+				"          Region,",
+				"          Country",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectRegion",
+				"SelectRegion sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delta',",
+				"     fileSystem: 'medallion',",
+				"     folderPath: 'Silver/Region',",
+				"     mergeSchema: false,",
+				"     autoCompact: false,",
+				"     optimizedWrite: false,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     upsertable: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 0) ~> SaveSilverRegion"
+			]
+		}
+	}
+}
