@@ -16,14 +16,12 @@
 				"userProperties": [],
 				"typeProperties": {
 					"source": {
-						"type": "DelimitedTextSource",
-						"storeSettings": {
-							"type": "AzureBlobStorageReadSettings",
-							"recursive": true,
-							"enablePartitionDiscovery": false
-						},
-						"formatSettings": {
-							"type": "DelimitedTextReadSettings"
+						"type": "AzureSqlSource",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "DynamicRange",
+						"partitionSettings": {
+							"partitionUpperBound": "",
+							"partitionLowerBound": ""
 						}
 					},
 					"sink": {
@@ -39,6 +37,8 @@
 						}
 					},
 					"enableStaging": false,
+					"enableSkipIncompatibleRow": false,
+					"validateDataConsistency": false,
 					"translator": {
 						"type": "TabularTranslator",
 						"typeConversion": true,
@@ -50,11 +50,8 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "csvsource",
-						"type": "DatasetReference",
-						"parameters": {
-							"fileName": "secondcsv.csv"
-						}
+						"referenceName": "ControlTable",
+						"type": "DatasetReference"
 					}
 				],
 				"outputs": [
