@@ -595,7 +595,7 @@
 																}
 															],
 															"type": "NonQuery",
-															"text": "UPDATE dbo.ControlTable\nSET \nModified=@lastModified,\nRefreshed=@datetime,\nProcessed='N'\nWhere CSV=fileName"
+															"text": "UPDATE dbo.ControlTable\nSET \nModified=@lastModified,\nRefreshed=@datetime,\nProcessed='N'\nWhere CSV=@fileName"
 														}
 													],
 													"scriptBlockExecutionTimeout": "02:00:00"
