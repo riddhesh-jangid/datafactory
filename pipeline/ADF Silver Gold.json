@@ -80,7 +80,7 @@
 				}
 			},
 			{
-				"name": "Script2",
+				"name": "Region",
 				"type": "Script",
 				"dependsOn": [],
 				"policy": {
@@ -110,7 +110,7 @@
 				"type": "IfCondition",
 				"dependsOn": [
 					{
-						"activity": "Script2",
+						"activity": "Region",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -119,7 +119,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@equals(activity('Script2').output.resultSetCount, 1) ",
+						"value": "@equals(activity('Region').output.resultSetCount, 1) ",
 						"type": "Expression"
 					},
 					"ifTrueActivities": [
@@ -138,6 +138,77 @@
 							"typeProperties": {
 								"dataflow": {
 									"referenceName": "RegionBronzeSilver",
+									"type": "DataFlowReference"
+								},
+								"compute": {
+									"coreCount": 8,
+									"computeType": "General"
+								},
+								"traceLevel": "Fine"
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Product",
+				"type": "Script",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "SQLZone",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "select CSV from dbo.ControlTable where CSV LIKE 'Product_%' AND Processed='N'"
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			},
+			{
+				"name": "If Condition1_copy1",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Product",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(activity('Product').output.resultSetCount, 1) ",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "ProductBronzeSilver",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "ProductBronzeSilver",
 									"type": "DataFlowReference"
 								},
 								"compute": {
