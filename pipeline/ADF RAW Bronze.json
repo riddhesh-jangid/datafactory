@@ -600,6 +600,78 @@
 													],
 													"scriptBlockExecutionTimeout": "02:00:00"
 												}
+											},
+											{
+												"name": "Set variable1_copy1_copy1",
+												"type": "SetVariable",
+												"dependsOn": [
+													{
+														"activity": "Script2_copy1_copy1_copy1",
+														"dependencyConditions": [
+															"Failed"
+														]
+													}
+												],
+												"policy": {
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "debugOutput",
+													"value": {
+														"value": "@concat(item().name, ' - ' ,activity('File').output.lastModified, 'Failed')",
+														"type": "Expression"
+													}
+												}
+											},
+											{
+												"name": "Set variable1_copy1_copy1_copy1",
+												"type": "SetVariable",
+												"dependsOn": [
+													{
+														"activity": "Script2_copy1_copy1_copy1",
+														"dependencyConditions": [
+															"Completed"
+														]
+													}
+												],
+												"policy": {
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "debugOutput",
+													"value": {
+														"value": "@concat(item().name, ' - ' ,activity('File').output.lastModified, 'Completed')",
+														"type": "Expression"
+													}
+												}
+											},
+											{
+												"name": "Set variable1_copy1_copy1_copy1_copy1",
+												"type": "SetVariable",
+												"dependsOn": [
+													{
+														"activity": "Script2_copy1_copy1_copy1",
+														"dependencyConditions": [
+															"Skipped"
+														]
+													}
+												],
+												"policy": {
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "debugOutput",
+													"value": {
+														"value": "@concat(item().name, ' - ' ,activity('File').output.lastModified, 'Skipped')",
+														"type": "Expression"
+													}
+												}
 											}
 										]
 									}
