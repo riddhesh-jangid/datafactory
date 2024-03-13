@@ -5,6 +5,9 @@
 		"factoryName": {
 			"value": "factoryzone"
 		},
+		"SQLZone_connectionString": {
+			"value": ""
+		},
 		"databrickszone_accessToken": {
 			"value": ""
 		},

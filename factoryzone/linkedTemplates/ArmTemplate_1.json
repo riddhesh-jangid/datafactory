@@ -1,0 +1,2116 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "factoryzone"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/medallion')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Medallion",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderName": {
+						"type": "string",
+						"defaultValue": "medallion"
+					},
+					"layerName": {
+						"type": "string"
+					},
+					"tableName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Bronze Datasets"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().tableName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().layerName",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().folderName",
+							"type": "Expression"
+						}
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "ProductKey\tProduct\tStandard Cost\tColor\tSubcategory\tCategory\tBackground Color Format\tFont Color Format",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SalesBronzeSilver')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "Medallion",
+								"type": "LinkedServiceReference"
+							},
+							"name": "BronzeSales"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "Medallion",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SaveSilverSales"
+						}
+					],
+					"transformations": [
+						{
+							"name": "selectSales",
+							"description": "Select Columns"
+						},
+						{
+							"name": "TransformationSales",
+							"description": "Tranformation"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     fileName as string",
+						"}",
+						"source(output(",
+						"          SalesOrderNumber as string,",
+						"          OrderDate as string,",
+						"          ProductKey as short,",
+						"          ResellerKey as short,",
+						"          EmployeeKey as short,",
+						"          SalesTerritoryKey as short,",
+						"          Quantity as short,",
+						"          {Unit Price} as string,",
+						"          Sales as string,",
+						"          Cost as string",
+						"     ),",
+						"     useSchema: false,",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'medallion',",
+						"     folderPath: 'Bronze',",
+						"     fileName: ($fileName),",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true) ~> BronzeSales",
+						"BronzeSales select(mapColumn(",
+						"          ProductKey,",
+						"          SalesTerritoryKey,",
+						"          Quantity,",
+						"          UnitPrice = {Unit Price},",
+						"          Sales,",
+						"          Cost,",
+						"          OrderDate",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectSales",
+						"selectSales derive(Year = split(OrderDate, ', ')[3],",
+						"          Month = split(split(OrderDate, ', ')[2],\" \")[1],",
+						"          UnitPrice = substring(UnitPrice, 2, 20),",
+						"          Sales = substring(Sales, 2, 20),",
+						"          Cost = substring(Cost, 2, 20)) ~> TransformationSales",
+						"TransformationSales sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     fileSystem: 'medallion',",
+						"     folderPath: 'Silver/Sales',",
+						"     mergeSchema: false,",
+						"     autoCompact: false,",
+						"     optimizedWrite: false,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('key',",
+						"          0,",
+						"          SalesTerritoryKey",
+						"     )) ~> SaveSilverSales"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/RegionSilverCDC')]",
+			"type": "Microsoft.DataFactory/factories/adfcdcs",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"SourceConnectionsInfo": [
+					{
+						"SourceEntities": [
+							{
+								"name": "medallion/Silver/Region",
+								"properties": {
+									"schema": [],
+									"dslConnectorProperties": [
+										{
+											"name": "container",
+											"value": "medallion"
+										},
+										{
+											"name": "fileSystem",
+											"value": "medallion"
+										},
+										{
+											"name": "folderPath",
+											"value": "Silver/Region"
+										}
+									]
+								}
+							}
+						],
+						"Connection": {
+							"linkedService": {
+								"referenceName": "Medallion",
+								"type": "LinkedServiceReference"
+							},
+							"linkedServiceType": "AzureBlobFS",
+							"type": "linkedservicetype",
+							"isInlineDataset": true,
+							"commonDslConnectorProperties": [
+								{
+									"name": "allowSchemaDrift",
+									"value": true
+								},
+								{
+									"name": "inferDriftedColumnTypes",
+									"value": true
+								},
+								{
+									"name": "format",
+									"value": "parquet"
+								},
+								{
+									"name": "dateFormats",
+									"value": [
+										"MM/dd/yyyy",
+										"dd/MM/yyyy",
+										"yyyy/MM/dd",
+										"MM-dd-yyyy",
+										"dd-MM-yyyy",
+										"yyyy-MM-dd",
+										"dd.MM.yyyy",
+										"MM.dd.yyyy",
+										"yyyy.MM.dd"
+									]
+								},
+								{
+									"name": "timestampFormats",
+									"value": [
+										"yyyyMMddHHmm",
+										"yyyyMMdd HHmm",
+										"yyyyMMddHHmmss",
+										"yyyyMMdd HHmmss",
+										"dd-MM-yyyy HH:mm:ss",
+										"dd-MM-yyyy HH:mm",
+										"yyyy-M-d H:m:s",
+										"yyyy-MM-dd\\'T\\'HH:mm:ss\\'Z\\'",
+										"yyyy-M-d\\'T\\'H:m:s\\'Z\\'",
+										"yyyy-M-d\\'T\\'H:m:s",
+										"yyyy-MM-dd\\'T\\'HH:mm:ss",
+										"yyyy-MM-dd HH:mm:ss",
+										"yyyy-MM-dd HH:mm",
+										"yyyy.MM.dd HH:mm:ss",
+										"MM/dd/yyyy HH:mm:ss",
+										"M/d/yyyy H:m:s",
+										"yyyy/MM/dd HH:mm:ss",
+										"yyyy/M/d H:m:s",
+										"dd MMM yyyy HH:mm:ss",
+										"dd MMMM yyyy HH:mm:ss",
+										"d MMM yyyy H:m:s",
+										"d MMMM yyyy H:m:s",
+										"d-M-yyyy H:m:s",
+										"d-M-yyyy H:m",
+										"yyyy-M-d H:m",
+										"MM/dd/yyyy HH:mm",
+										"M/d/yyyy H:m",
+										"yyyy/MM/dd HH:mm",
+										"yyyy/M/d H:m",
+										"dd MMMM yyyy HH:mm",
+										"dd MMM yyyy HH:mm",
+										"d MMMM yyyy H:m",
+										"d MMM yyyy H:m",
+										"MM-dd-yyyy hh:mm:ss a",
+										"MM-dd-yyyy HH:mm:ss",
+										"MM/dd/yyyy hh:mm:ss a",
+										"yyyy.MM.dd hh:mm:ss a",
+										"MM/dd/yyyy",
+										"dd/MM/yyyy",
+										"yyyy/MM/dd",
+										"MM-dd-yyyy",
+										"dd-MM-yyyy",
+										"yyyy-MM-dd",
+										"dd.MM.yyyy",
+										"MM.dd.yyyy",
+										"yyyy.MM.dd"
+									]
+								},
+								{
+									"name": "enableCdc",
+									"value": true
+								},
+								{
+									"name": "skipInitialLoad",
+									"value": true
+								}
+							]
+						}
+					}
+				],
+				"TargetConnectionsInfo": [
+					{
+						"TargetEntities": [
+							{
+								"name": "medallion/CDC/Region.csv",
+								"properties": {
+									"schema": [],
+									"dslConnectorProperties": [
+										{
+											"name": "container",
+											"value": "medallion"
+										},
+										{
+											"name": "fileSystem",
+											"value": "medallion"
+										},
+										{
+											"name": "folderPath",
+											"value": "CDC/Region.csv"
+										}
+									]
+								}
+							}
+						],
+						"Connection": {
+							"linkedService": {
+								"referenceName": "Medallion",
+								"type": "LinkedServiceReference"
+							},
+							"linkedServiceType": "AzureBlobFS",
+							"type": "linkedservicetype",
+							"isInlineDataset": true,
+							"commonDslConnectorProperties": [
+								{
+									"name": "allowSchemaDrift",
+									"value": true
+								},
+								{
+									"name": "inferDriftedColumnTypes",
+									"value": true
+								},
+								{
+									"name": "format",
+									"value": "delimited"
+								},
+								{
+									"name": "columnNamesAsHeader",
+									"value": true
+								},
+								{
+									"name": "columnDelimiter",
+									"value": ","
+								},
+								{
+									"name": "escapeChar",
+									"value": "\\\\"
+								},
+								{
+									"name": "quoteChar",
+									"value": "\\\""
+								}
+							]
+						},
+						"DataMapperMappings": [
+							{
+								"targetEntityName": "medallion/CDC/Region.csv",
+								"sourceEntityName": "medallion/Silver/Region",
+								"sourceConnectionReference": {
+									"connectionName": "Medallion",
+									"type": "linkedservicetype"
+								},
+								"attributeMappingInfo": {
+									"attributeMappings": []
+								}
+							}
+						],
+						"Relationships": []
+					}
+				],
+				"Policy": {
+					"recurrence": {
+						"frequency": "Minute",
+						"interval": 1
+					},
+					"mode": "Microbatch"
+				},
+				"allowVNetOverride": false
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ADF RAW Bronze')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Metadata",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ListZone",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderName": "rawdata"
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "EachFile",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Metadata",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Metadata').output.childItems",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "File",
+									"type": "GetMetadata",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "fileZone",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderName": "rawdata",
+												"fileName": {
+													"value": "@item().name",
+													"type": "Expression"
+												}
+											}
+										},
+										"fieldList": [
+											"lastModified",
+											"itemName"
+										],
+										"storeSettings": {
+											"type": "AzureBlobStorageReadSettings",
+											"recursive": true,
+											"enablePartitionDiscovery": false
+										},
+										"formatSettings": {
+											"type": "DelimitedTextReadSettings"
+										}
+									}
+								},
+								{
+									"name": "Script1",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "File",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "SQLZone",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"parameters": [
+													{
+														"name": "fileName",
+														"type": "String",
+														"value": {
+															"value": "@item().name",
+															"type": "Expression"
+														},
+														"direction": "Input"
+													}
+												],
+												"type": "Query",
+												"text": "select * from dbo.ControlTable where CSV=@fileName"
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								},
+								{
+									"name": "If Condition1",
+									"type": "IfCondition",
+									"state": "Inactive",
+									"onInactiveMarkAs": "Failed",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@or(\n    equals(activity('Script1').output.resultSetCount, 0), \n    and(\n        equals(activity('Script1').output.resultSetCount, 1), \n        greater(\n        activity('Script1').output.resultSets[0].rows.Modified,\n        activity('Script1').output.resultSets[0].rows.Refreshed        \n        )\n    )\n)",
+											"type": "Expression"
+										},
+										"ifTrueActivities": [
+											{
+												"name": "Copy data1_copy1",
+												"type": "Copy",
+												"dependsOn": [
+													{
+														"activity": "Script2_copy1",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "DelimitedTextSource",
+														"storeSettings": {
+															"type": "AzureBlobStorageReadSettings",
+															"recursive": true,
+															"enablePartitionDiscovery": false
+														},
+														"formatSettings": {
+															"type": "DelimitedTextReadSettings"
+														}
+													},
+													"sink": {
+														"type": "DelimitedTextSink",
+														"storeSettings": {
+															"type": "AzureBlobFSWriteSettings"
+														},
+														"formatSettings": {
+															"type": "DelimitedTextWriteSettings",
+															"quoteAllText": true,
+															"fileExtension": ".txt"
+														}
+													},
+													"enableStaging": false,
+													"translator": {
+														"type": "TabularTranslator",
+														"typeConversion": true,
+														"typeConversionSettings": {
+															"allowDataTruncation": true,
+															"treatBooleanAsNumber": false
+														}
+													}
+												},
+												"inputs": [
+													{
+														"referenceName": "fileZone",
+														"type": "DatasetReference",
+														"parameters": {
+															"folderName": "rawdata",
+															"fileName": {
+																"value": "@item().name",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "medallion",
+														"type": "DatasetReference",
+														"parameters": {
+															"folderName": "medallion",
+															"layerName": "Bronze",
+															"tableName": {
+																"value": "@item().name",
+																"type": "Expression"
+															}
+														}
+													}
+												]
+											},
+											{
+												"name": "Script2_copy1",
+												"type": "Script",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"linkedServiceName": {
+													"referenceName": "SQLZone",
+													"type": "LinkedServiceReference"
+												},
+												"typeProperties": {
+													"scripts": [
+														{
+															"parameters": [
+																{
+																	"name": "fileName",
+																	"type": "String",
+																	"value": {
+																		"value": "@item().name",
+																		"type": "Expression"
+																	},
+																	"direction": "Input"
+																},
+																{
+																	"name": "lastModified",
+																	"type": "Datetime",
+																	"value": {
+																		"value": "@activity('File').output.lastModified",
+																		"type": "Expression"
+																	},
+																	"direction": "Input"
+																},
+																{
+																	"name": "datetime",
+																	"type": "Datetime",
+																	"value": {
+																		"value": "@utcnow()",
+																		"type": "Expression"
+																	},
+																	"direction": "Input"
+																}
+															],
+															"type": "NonQuery",
+															"text": "INSERT INTO dbo.ControlTAble VALUES (@fileName, @lastModified, @datetime, 'N')"
+														}
+													],
+													"scriptBlockExecutionTimeout": "02:00:00"
+												}
+											}
+										]
+									}
+								},
+								{
+									"name": "Fail1",
+									"type": "Fail",
+									"state": "Inactive",
+									"onInactiveMarkAs": "Succeeded",
+									"dependsOn": [
+										{
+											"activity": "If Condition1",
+											"dependencyConditions": [
+												"Failed"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"message": "We are not able to read table",
+										"errorCode": "500"
+									}
+								},
+								{
+									"name": "Switch1",
+									"type": "Switch",
+									"dependsOn": [
+										{
+											"activity": "Script1",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"on": {
+											"value": "@string(\n    if(\n        equals(activity('Script1').output.resultSetCount, 0), \n        0, \n        if(\n            and(\n            equals(activity('Script1').output.resultSetCount, 1), \n            greater(\n            activity('File').output.lastModified,\n            activity('Script1').output.resultSets[0].rows[0].Refreshed        \n            )), 1, -1)\n        )\n)\n\n\n",
+											"type": "Expression"
+										},
+										"cases": [
+											{
+												"value": "0",
+												"activities": [
+													{
+														"name": "Copy data1_copy1_copy1",
+														"type": "Copy",
+														"dependsOn": [
+															{
+																"activity": "Script2_copy1_copy1",
+																"dependencyConditions": [
+																	"Succeeded"
+																]
+															}
+														],
+														"policy": {
+															"timeout": "0.12:00:00",
+															"retry": 0,
+															"retryIntervalInSeconds": 30,
+															"secureOutput": false,
+															"secureInput": false
+														},
+														"userProperties": [],
+														"typeProperties": {
+															"source": {
+																"type": "DelimitedTextSource",
+																"storeSettings": {
+																	"type": "AzureBlobStorageReadSettings",
+																	"recursive": true,
+																	"enablePartitionDiscovery": false
+																},
+																"formatSettings": {
+																	"type": "DelimitedTextReadSettings"
+																}
+															},
+															"sink": {
+																"type": "DelimitedTextSink",
+																"storeSettings": {
+																	"type": "AzureBlobFSWriteSettings"
+																},
+																"formatSettings": {
+																	"type": "DelimitedTextWriteSettings",
+																	"quoteAllText": true,
+																	"fileExtension": ".txt"
+																}
+															},
+															"enableStaging": false,
+															"translator": {
+																"type": "TabularTranslator",
+																"typeConversion": true,
+																"typeConversionSettings": {
+																	"allowDataTruncation": true,
+																	"treatBooleanAsNumber": false
+																}
+															}
+														},
+														"inputs": [
+															{
+																"referenceName": "fileZone",
+																"type": "DatasetReference",
+																"parameters": {
+																	"folderName": "rawdata",
+																	"fileName": {
+																		"value": "@item().name",
+																		"type": "Expression"
+																	}
+																}
+															}
+														],
+														"outputs": [
+															{
+																"referenceName": "medallion",
+																"type": "DatasetReference",
+																"parameters": {
+																	"folderName": "medallion",
+																	"layerName": "Bronze",
+																	"tableName": {
+																		"value": "@item().name",
+																		"type": "Expression"
+																	}
+																}
+															}
+														]
+													},
+													{
+														"name": "Script2_copy1_copy1",
+														"type": "Script",
+														"dependsOn": [],
+														"policy": {
+															"timeout": "0.12:00:00",
+															"retry": 0,
+															"retryIntervalInSeconds": 30,
+															"secureOutput": false,
+															"secureInput": false
+														},
+														"userProperties": [],
+														"linkedServiceName": {
+															"referenceName": "SQLZone",
+															"type": "LinkedServiceReference"
+														},
+														"typeProperties": {
+															"scripts": [
+																{
+																	"parameters": [
+																		{
+																			"name": "fileName",
+																			"type": "String",
+																			"value": {
+																				"value": "@item().name",
+																				"type": "Expression"
+																			},
+																			"direction": "Input"
+																		},
+																		{
+																			"name": "lastModified",
+																			"type": "Datetime",
+																			"value": {
+																				"value": "@activity('File').output.lastModified",
+																				"type": "Expression"
+																			},
+																			"direction": "Input"
+																		},
+																		{
+																			"name": "datetime",
+																			"type": "Datetime",
+																			"value": {
+																				"value": "@utcnow()",
+																				"type": "Expression"
+																			},
+																			"direction": "Input"
+																		}
+																	],
+																	"type": "NonQuery",
+																	"text": "INSERT INTO dbo.ControlTAble VALUES (@fileName, @lastModified, @datetime, 'N')"
+																}
+															],
+															"scriptBlockExecutionTimeout": "02:00:00"
+														}
+													}
+												]
+											},
+											{
+												"value": "1",
+												"activities": [
+													{
+														"name": "Script2_copy1_copy1_copy1",
+														"type": "Script",
+														"dependsOn": [],
+														"policy": {
+															"timeout": "0.12:00:00",
+															"retry": 0,
+															"retryIntervalInSeconds": 30,
+															"secureOutput": false,
+															"secureInput": false
+														},
+														"userProperties": [],
+														"linkedServiceName": {
+															"referenceName": "SQLZone",
+															"type": "LinkedServiceReference"
+														},
+														"typeProperties": {
+															"scripts": [
+																{
+																	"parameters": [
+																		{
+																			"name": "fileName",
+																			"type": "String",
+																			"value": {
+																				"value": "@item().name",
+																				"type": "Expression"
+																			},
+																			"direction": "Input"
+																		},
+																		{
+																			"name": "lastModified",
+																			"type": "Datetime",
+																			"value": {
+																				"value": "@activity('File').output.lastModified",
+																				"type": "Expression"
+																			},
+																			"direction": "Input"
+																		},
+																		{
+																			"name": "datetime",
+																			"type": "Datetime",
+																			"value": {
+																				"value": "@utcnow()",
+																				"type": "Expression"
+																			},
+																			"direction": "Input"
+																		}
+																	],
+																	"type": "NonQuery",
+																	"text": "UPDATE dbo.ControlTable\nSET \nModified=@lastModified,\nRefreshed=@datetime,\nProcessed='N'\nWhere CSV=@fileName"
+																}
+															],
+															"scriptBlockExecutionTimeout": "02:00:00"
+														}
+													},
+													{
+														"name": "Copy data1_copy1_copy1_copy1",
+														"type": "Copy",
+														"dependsOn": [
+															{
+																"activity": "Script2_copy1_copy1_copy1",
+																"dependencyConditions": [
+																	"Succeeded"
+																]
+															}
+														],
+														"policy": {
+															"timeout": "0.12:00:00",
+															"retry": 0,
+															"retryIntervalInSeconds": 30,
+															"secureOutput": false,
+															"secureInput": false
+														},
+														"userProperties": [],
+														"typeProperties": {
+															"source": {
+																"type": "DelimitedTextSource",
+																"storeSettings": {
+																	"type": "AzureBlobStorageReadSettings",
+																	"recursive": true,
+																	"enablePartitionDiscovery": false
+																},
+																"formatSettings": {
+																	"type": "DelimitedTextReadSettings"
+																}
+															},
+															"sink": {
+																"type": "DelimitedTextSink",
+																"storeSettings": {
+																	"type": "AzureBlobFSWriteSettings"
+																},
+																"formatSettings": {
+																	"type": "DelimitedTextWriteSettings",
+																	"quoteAllText": true,
+																	"fileExtension": ".txt"
+																}
+															},
+															"enableStaging": false,
+															"translator": {
+																"type": "TabularTranslator",
+																"typeConversion": true,
+																"typeConversionSettings": {
+																	"allowDataTruncation": true,
+																	"treatBooleanAsNumber": false
+																}
+															}
+														},
+														"inputs": [
+															{
+																"referenceName": "fileZone",
+																"type": "DatasetReference",
+																"parameters": {
+																	"folderName": "rawdata",
+																	"fileName": {
+																		"value": "@item().name",
+																		"type": "Expression"
+																	}
+																}
+															}
+														],
+														"outputs": [
+															{
+																"referenceName": "medallion",
+																"type": "DatasetReference",
+																"parameters": {
+																	"folderName": "medallion",
+																	"layerName": "Bronze",
+																	"tableName": {
+																		"value": "@item().name",
+																		"type": "Expression"
+																	}
+																}
+															}
+														]
+													}
+												]
+											}
+										]
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"processedFileName": {
+						"type": "Array"
+					},
+					"debugOutput": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "ADF Medallion"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/medallion')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/BronzeSilver')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "RegionSilver",
+								"type": "DatasetReference"
+							},
+							"name": "BronzeRegion"
+						},
+						{
+							"dataset": {
+								"referenceName": "ProductSilver",
+								"type": "DatasetReference"
+							},
+							"name": "BronzeProduct"
+						},
+						{
+							"linkedService": {
+								"referenceName": "Medallion",
+								"type": "LinkedServiceReference"
+							},
+							"name": "BronzeSales"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "Medallion",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SaveSilverRegion"
+						},
+						{
+							"linkedService": {
+								"referenceName": "Medallion",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SaveSilverProduct"
+						},
+						{
+							"linkedService": {
+								"referenceName": "Medallion",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SaveSilverSales"
+						}
+					],
+					"transformations": [
+						{
+							"name": "SelectRegion",
+							"description": "Select Columns"
+						},
+						{
+							"name": "selectProduct",
+							"description": "Select Columns"
+						},
+						{
+							"name": "TransformationProduct",
+							"description": "Tranformation"
+						},
+						{
+							"name": "selectSales",
+							"description": "Select Columns"
+						},
+						{
+							"name": "TransformationSales",
+							"description": "Tranformation"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          SalesTerritoryKey as string,",
+						"          Region as string,",
+						"          Country as string,",
+						"          Group as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false) ~> BronzeRegion",
+						"source(output(",
+						"          ProductKey as string,",
+						"          Product as string,",
+						"          {Standard Cost} as string,",
+						"          Color as string,",
+						"          Subcategory as string,",
+						"          Category as string,",
+						"          {Background Color Format} as string,",
+						"          {Font Color Format} as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> BronzeProduct",
+						"source(output(",
+						"          SalesOrderNumber as string,",
+						"          OrderDate as string,",
+						"          ProductKey as short,",
+						"          ResellerKey as short,",
+						"          EmployeeKey as short,",
+						"          SalesTerritoryKey as short,",
+						"          Quantity as short,",
+						"          {Unit Price} as string,",
+						"          Sales as string,",
+						"          Cost as string",
+						"     ),",
+						"     useSchema: false,",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'medallion',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true,",
+						"     wildcardPaths:['Bronze/data*']) ~> BronzeSales",
+						"BronzeRegion select(mapColumn(",
+						"          SalesTerritoryKey,",
+						"          Region,",
+						"          Country",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectRegion",
+						"BronzeProduct select(mapColumn(",
+						"          ProductKey,",
+						"          Product,",
+						"          StandardCost = {Standard Cost},",
+						"          Color,",
+						"          Subcategory,",
+						"          Category",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectProduct",
+						"selectProduct derive(StandardCost = substring(StandardCost,2,20),",
+						"          Product = split(Product,',')[1]) ~> TransformationProduct",
+						"BronzeSales select(mapColumn(",
+						"          ProductKey,",
+						"          SalesTerritoryKey,",
+						"          Quantity,",
+						"          UnitPrice = {Unit Price},",
+						"          Sales,",
+						"          Cost,",
+						"          OrderDate",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectSales",
+						"selectSales derive(Year = split(OrderDate, ', ')[3],",
+						"          Month = split(split(OrderDate, ', ')[2],\" \")[1],",
+						"          UnitPrice = substring(UnitPrice, 2, 20),",
+						"          Sales = substring(Sales, 2, 20),",
+						"          Cost = substring(Cost, 2, 20)) ~> TransformationSales",
+						"SelectRegion sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     fileSystem: 'medallion',",
+						"     folderPath: 'Silver/Region',",
+						"     mergeSchema: false,",
+						"     autoCompact: false,",
+						"     optimizedWrite: false,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 1) ~> SaveSilverRegion",
+						"TransformationProduct sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     fileSystem: 'medallion',",
+						"     folderPath: 'Silver/Product',",
+						"     mergeSchema: false,",
+						"     autoCompact: false,",
+						"     optimizedWrite: false,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SaveSilverProduct",
+						"TransformationSales sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     fileSystem: 'medallion',",
+						"     folderPath: 'Silver/Sales',",
+						"     mergeSchema: false,",
+						"     autoCompact: false,",
+						"     optimizedWrite: false,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('key',",
+						"          0,",
+						"          SalesTerritoryKey",
+						"     )) ~> SaveSilverSales"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Gold')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "RegionGold",
+								"type": "DatasetReference"
+							},
+							"name": "RegionGold",
+							"description": "Region Silver Table"
+						},
+						{
+							"dataset": {
+								"referenceName": "ProductGold",
+								"type": "DatasetReference"
+							},
+							"name": "ProductGold",
+							"description": "Product Silver Table"
+						},
+						{
+							"dataset": {
+								"referenceName": "SalesGold",
+								"type": "DatasetReference"
+							},
+							"name": "SalesGold"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "Medallion",
+								"type": "LinkedServiceReference"
+							},
+							"name": "Gold"
+						}
+					],
+					"transformations": [
+						{
+							"name": "SalesJoinProduct"
+						},
+						{
+							"name": "SalesJoinProductJoinRegion"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          SalesTerritoryKey as string,",
+						"          Region as string,",
+						"          Country as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> RegionGold",
+						"source(output(",
+						"          ProductKey as string,",
+						"          Product as string,",
+						"          StandardCost as string,",
+						"          Color as string,",
+						"          Subcategory as string,",
+						"          Category as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> ProductGold",
+						"source(output(",
+						"          ProductKey as string,",
+						"          Quantity as short,",
+						"          UnitPrice as string,",
+						"          Sales as string,",
+						"          Cost as string,",
+						"          OrderDate as string,",
+						"          Year as string,",
+						"          Month as string,",
+						"          SalesTerritoryKey as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> SalesGold",
+						"SalesGold, ProductGold join(SalesGold@ProductKey == ProductGold@ProductKey,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> SalesJoinProduct",
+						"SalesJoinProduct, RegionGold join(SalesGold@SalesTerritoryKey == RegionGold@SalesTerritoryKey,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> SalesJoinProductJoinRegion",
+						"SalesJoinProductJoinRegion sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     fileSystem: 'medallion',",
+						"     folderPath: 'Gold',",
+						"     mergeSchema: false,",
+						"     autoCompact: false,",
+						"     optimizedWrite: false,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 1) ~> Gold"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ProductBronzeSilver')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ProductSilver",
+								"type": "DatasetReference"
+							},
+							"name": "BronzeProduct"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "Medallion",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SaveSilverProduct"
+						}
+					],
+					"transformations": [
+						{
+							"name": "selectProduct",
+							"description": "Select Columns"
+						},
+						{
+							"name": "TransformationProduct",
+							"description": "Tranformation"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          ProductKey as string,",
+						"          Product as string,",
+						"          {Standard Cost} as string,",
+						"          Color as string,",
+						"          Subcategory as string,",
+						"          Category as string,",
+						"          {Background Color Format} as string,",
+						"          {Font Color Format} as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> BronzeProduct",
+						"BronzeProduct select(mapColumn(",
+						"          ProductKey,",
+						"          Product,",
+						"          StandardCost = {Standard Cost},",
+						"          Color,",
+						"          Subcategory,",
+						"          Category",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectProduct",
+						"selectProduct derive(StandardCost = substring(StandardCost,2,20),",
+						"          Product = split(Product,',')[1]) ~> TransformationProduct",
+						"TransformationProduct sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     fileSystem: 'medallion',",
+						"     folderPath: 'Silver/Product',",
+						"     mergeSchema: false,",
+						"     autoCompact: false,",
+						"     optimizedWrite: false,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SaveSilverProduct"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/RegionBronzeSilver')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "RegionSilver",
+								"type": "DatasetReference"
+							},
+							"name": "BronzeRegion"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "Medallion",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SaveSilverRegion"
+						}
+					],
+					"transformations": [
+						{
+							"name": "SelectRegion",
+							"description": "Select Columns"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          SalesTerritoryKey as string,",
+						"          Region as string,",
+						"          Country as string,",
+						"          Group as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> BronzeRegion",
+						"BronzeRegion select(mapColumn(",
+						"          SalesTerritoryKey,",
+						"          Region,",
+						"          Country",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectRegion",
+						"SelectRegion sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     fileSystem: 'medallion',",
+						"     folderPath: 'Silver/Region',",
+						"     mergeSchema: false,",
+						"     autoCompact: false,",
+						"     optimizedWrite: false,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 0) ~> SaveSilverRegion"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ADF Bronze Silver')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Script1",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "SQLZone",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "select CSV from dbo.ControlTable where CSV LIKE 'data_%' AND Processed='N'"
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Script1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Script1').output.resultSets[0].rows",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "SalesBronzeSilver",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "SalesBronzeSilver",
+											"type": "DataFlowReference",
+											"parameters": {
+												"fileName": {
+													"value": "'@{item().CSV}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"BronzeSales": {},
+												"SaveSilverSales": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								},
+								{
+									"name": "Script2",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "SalesBronzeSilver",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "SQLZone",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"parameters": [
+													{
+														"name": "CSV",
+														"type": "String",
+														"value": {
+															"value": "@item().CSV",
+															"type": "Expression"
+														},
+														"direction": "Input"
+													}
+												],
+												"type": "NonQuery",
+												"text": "UPDATE dbo.ControlTable\nSET Processed='Y'\nWhere CSV=@CSV"
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Region",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "SQLZone",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "select CSV from dbo.ControlTable where CSV LIKE 'Region_%' AND Processed='N'"
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					},
+					{
+						"name": "If Condition1",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Region",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(activity('Region').output.resultSetCount, 1) ",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "RegionBronzeSilver",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "RegionBronzeSilver",
+											"type": "DataFlowReference",
+											"parameters": {},
+											"datasetParameters": {
+												"BronzeRegion": {},
+												"SaveSilverRegion": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								},
+								{
+									"name": "Script3",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "RegionBronzeSilver",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "SQLZone",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "NonQuery",
+												"text": "UPDATE dbo.ControlTable\nSET Processed='Y'\nWhere CSV='Region.csv'"
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Product",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "SQLZone",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "select CSV from dbo.ControlTable where CSV LIKE 'Product_%' AND Processed='N'"
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					},
+					{
+						"name": "If Condition1_copy1",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Product",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(activity('Product').output.resultSetCount, 1) ",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "ProductBronzeSilver",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "ProductBronzeSilver",
+											"type": "DataFlowReference",
+											"parameters": {},
+											"datasetParameters": {
+												"BronzeProduct": {},
+												"SaveSilverProduct": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								},
+								{
+									"name": "Script4",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "ProductBronzeSilver",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "SQLZone",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "Query",
+												"text": "UPDATE dbo.ControlTable\nSET Processed='Y'\nWhere CSV='Product.csv'"
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "ADF Medallion"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/SalesBronzeSilver')]",
+				"[concat(variables('factoryId'), '/dataflows/RegionBronzeSilver')]",
+				"[concat(variables('factoryId'), '/dataflows/ProductBronzeSilver')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ADF Silver Gold')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Gold",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Gold",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"RegionGold": {},
+									"ProductGold": {},
+									"SalesGold": {},
+									"Gold": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "ADF Medallion"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/Gold')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Silver Gold')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Silver Layer",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "Bronze Layer",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/anshugbp@gmail.com/Medallion/Silver Layer"
+						},
+						"linkedServiceName": {
+							"referenceName": "databrickszone",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Bronze Layer",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "ADF RAW Bronze",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Gold Layer",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "Silver Layer",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/anshugbp@gmail.com/Medallion/Gold Layer"
+						},
+						"linkedServiceName": {
+							"referenceName": "databrickszone",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/ADF RAW Bronze')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Medallion')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Bronze",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "ADF RAW Bronze",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Silver",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Bronze",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "ADF Bronze Silver",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Gold",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Silver",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "ADF Silver Gold",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "ADF Medallion"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/ADF RAW Bronze')]",
+				"[concat(variables('factoryId'), '/pipelines/ADF Bronze Silver')]",
+				"[concat(variables('factoryId'), '/pipelines/ADF Silver Gold')]"
+			]
+		}
+	]
+}

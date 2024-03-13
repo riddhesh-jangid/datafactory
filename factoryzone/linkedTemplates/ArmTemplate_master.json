@@ -7,6 +7,10 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "factoryzone"
 		},
+		"SQLZone_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'SQLZone'"
+		},
 		"databrickszone_accessToken": {
 			"type": "secureString",
 			"metadata": "Secure string for 'accessToken' of 'databrickszone'"
@@ -50,6 +54,9 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
+					"SQLZone_connectionString": {
+						"value": "[parameters('SQLZone_connectionString')]"
+					},
 					"databrickszone_accessToken": {
 						"value": "[parameters('databrickszone_accessToken')]"
 					},
@@ -65,6 +72,26 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "factoryzone_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'factoryzone_ArmTemplate_0')]"
+			]
 		}
 	]
 }
