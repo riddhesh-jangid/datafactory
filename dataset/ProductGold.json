@@ -20,15 +20,27 @@
 		},
 		"schema": [
 			{
-				"name": "SalesTerritoryKey",
+				"name": "ProductKey",
 				"type": "UTF8"
 			},
 			{
-				"name": "Region",
+				"name": "Product",
 				"type": "UTF8"
 			},
 			{
-				"name": "Country",
+				"name": "StandardCost",
+				"type": "UTF8"
+			},
+			{
+				"name": "Color",
+				"type": "UTF8"
+			},
+			{
+				"name": "Subcategory",
+				"type": "UTF8"
+			},
+			{
+				"name": "Category",
 				"type": "UTF8"
 			}
 		]

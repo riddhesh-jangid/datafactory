@@ -1,0 +1,73 @@
+{
+	"name": "Gold",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "RegionGold",
+						"type": "DatasetReference"
+					},
+					"name": "RegionGold",
+					"description": "Region Silver Table"
+				},
+				{
+					"dataset": {
+						"referenceName": "ProductGold",
+						"type": "DatasetReference"
+					},
+					"name": "ProductGold",
+					"description": "Product Silver Table"
+				},
+				{
+					"dataset": {
+						"referenceName": "SalesGold",
+						"type": "DatasetReference"
+					},
+					"name": "SalesGold"
+				}
+			],
+			"sinks": [],
+			"transformations": [],
+			"scriptLines": [
+				"source(output(",
+				"          SalesTerritoryKey as string,",
+				"          Region as string,",
+				"          Country as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet') ~> RegionGold",
+				"source(output(",
+				"          ProductKey as string,",
+				"          Product as string,",
+				"          StandardCost as string,",
+				"          Color as string,",
+				"          Subcategory as string,",
+				"          Category as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet') ~> ProductGold",
+				"source(output(",
+				"          ProductKey as short,",
+				"          Quantity as short,",
+				"          UnitPrice as string,",
+				"          Sales as string,",
+				"          Cost as string,",
+				"          OrderDate as string,",
+				"          Year as string,",
+				"          Month as string,",
+				"          SalesTerritoryKey as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet') ~> SalesGold"
+			]
+		}
+	}
+}

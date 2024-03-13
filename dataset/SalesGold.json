@@ -20,15 +20,39 @@
 		},
 		"schema": [
 			{
+				"name": "ProductKey",
+				"type": "INT_16"
+			},
+			{
+				"name": "Quantity",
+				"type": "INT_16"
+			},
+			{
+				"name": "UnitPrice",
+				"type": "UTF8"
+			},
+			{
+				"name": "Sales",
+				"type": "UTF8"
+			},
+			{
+				"name": "Cost",
+				"type": "UTF8"
+			},
+			{
+				"name": "OrderDate",
+				"type": "UTF8"
+			},
+			{
+				"name": "Year",
+				"type": "UTF8"
+			},
+			{
+				"name": "Month",
+				"type": "UTF8"
+			},
+			{
 				"name": "SalesTerritoryKey",
-				"type": "UTF8"
-			},
-			{
-				"name": "Region",
-				"type": "UTF8"
-			},
-			{
-				"name": "Country",
 				"type": "UTF8"
 			}
 		]
